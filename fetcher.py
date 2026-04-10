@@ -1,7 +1,18 @@
 import feedparser
-import time
 from datetime import datetime, timezone, timedelta
+from deep_translator import GoogleTranslator
 from sources import RSS_FEEDS, is_relevant
+
+_translator = GoogleTranslator(source="auto", target="es")
+
+
+def _translate(text: str) -> str:
+    if not text:
+        return text
+    try:
+        return _translator.translate(text)
+    except Exception:
+        return text
 
 
 def fetch_articles(hours_back: int = 24) -> dict[str, list[dict]]:
@@ -30,9 +41,11 @@ def fetch_articles(hours_back: int = 24) -> dict[str, list[dict]]:
                 if title.lower() in existing_titles:
                     continue
 
+                clean_summary = _clean_summary(summary)
+
                 categories[category].append({
-                    "title": title,
-                    "summary": _clean_summary(summary),
+                    "title": _translate(title),
+                    "summary": _translate(clean_summary),
                     "link": link,
                     "source": feed_info["name"],
                     "date": pub_date,
@@ -61,7 +74,6 @@ def _parse_date(entry) -> datetime | None:
 
 
 def _clean_summary(text: str) -> str:
-    """Elimina HTML básico y recorta el resumen."""
     import re
     text = re.sub(r"<[^>]+>", "", text)
     text = text.strip()
