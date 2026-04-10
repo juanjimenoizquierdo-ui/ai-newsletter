@@ -61,7 +61,7 @@ def build_html(categories: dict[str, list[dict]]) -> str:
 
 
 def _section_html(category: str, articles: list[dict]) -> str:
-    icon = "🤝" if category == "M&A" else "⚖️"
+    icon = "🤝" if category == "M&A & Mercantil" else "⚖️"
     items_html = "".join(_article_html(a) for a in articles)
 
     return f"""

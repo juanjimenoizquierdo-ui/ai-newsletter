@@ -8,7 +8,7 @@ def main():
     categories = fetch_articles(hours_back=24)
 
     total = sum(len(v) for v in categories.values())
-    print(f"Artículos encontrados: {total} (M&A: {len(categories['M&A'])}, Legal: {len(categories['Legal & Regulación'])})")
+    print(f"Artículos encontrados: {total} (M&A: {len(categories['M&A & Mercantil'])}, Legal: {len(categories['Legal & Regulación IA'])})")
 
     print("Generando email...")
     html = build_html(categories)

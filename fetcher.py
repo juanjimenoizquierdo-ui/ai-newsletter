@@ -18,7 +18,7 @@ def _translate(text: str) -> str:
 def fetch_articles(hours_back: int = 24) -> dict[str, list[dict]]:
     """Obtiene artículos relevantes de las últimas N horas, agrupados por categoría."""
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours_back)
-    categories: dict[str, list[dict]] = {"M&A": [], "Legal & Regulación": []}
+    categories: dict[str, list[dict]] = {"M&A & Mercantil": [], "Legal & Regulación IA": []}
 
     for feed_info in RSS_FEEDS:
         try:
