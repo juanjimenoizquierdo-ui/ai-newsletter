@@ -4,9 +4,11 @@ from datetime import datetime
 
 
 def send_newsletter(html: str) -> bool:
-    api_key = os.environ.get("RESEND_API_KEY")
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
     if not api_key:
         raise ValueError("RESEND_API_KEY no está configurada")
+    if not api_key.startswith("re_"):
+        print(f"ADVERTENCIA: El API key no empieza por 're_' — puede ser inválido. Primeros chars: '{api_key[:6]}...'")
 
     resend.api_key = api_key
 
