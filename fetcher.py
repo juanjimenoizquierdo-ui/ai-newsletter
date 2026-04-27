@@ -42,10 +42,22 @@ def _enrich_with_groq(title: str, content: str, category: str) -> str:
     if not client or not content:
         return content[:400] if content else title
 
-    prompt = f"""Eres un analista experto en {category}.
-Escribe un resumen informativo en español (3-5 líneas) sobre esta noticia.
-Incluye: cifras clave (valoraciones, importes, porcentajes), partes involucradas y contexto relevante.
-Sé preciso y conciso. Si el artículo está en inglés, responde en español igualmente.
+    category_context = {
+        "Enforcement Decisions": "regulación y enforcement europeo. Destaca: autoridad que actúa, infractor, importe de multa o medida impuesta, base legal invocada y precedente que sienta",
+        "AI Law & Regulation": "regulación de inteligencia artificial (AI Act, gobernanza IA). Destaca: obligaciones concretas, plazos, autoridades implicadas y sectores afectados",
+        "Privacy & GDPR Enforcement": "privacidad y enforcement GDPR. Destaca: autoridad de control, base legal, derechos afectados, importe de sanción si aplica y criterio interpretativo",
+        "Fintech & DORA": "regulación fintech y resiliencia operativa digital (DORA, EBA, ESMA, PSD). Destaca: entidades supervisadas, obligaciones nuevas, plazos de cumplimiento",
+        "Legal Tech": "tecnología aplicada al derecho. Destaca: herramienta o empresa, funcionalidad, mercado objetivo (Europa) e implicaciones para despachos o equipos legales",
+        "M&A España": "fusiones y adquisiciones en España. Destaca: partes, valoración, estructura del deal, sector y ángulo regulatorio si lo hay",
+        "Regulación Europea General": "legislación y política regulatoria europea. Destaca: norma, institución impulsora, estado de tramitación y obligaciones principales",
+        "IA General": "inteligencia artificial con implicación regulatoria o legal. Destaca: modelo o empresa, capacidad relevante y por qué importa desde un ángulo legal o de compliance",
+    }
+    focus = category_context.get(category, f"análisis experto en {category}")
+
+    prompt = f"""Eres un analista jurídico especializado en regulación europea y M&A.
+Escribe un resumen en español (3-5 líneas) sobre esta noticia enfocado en: {focus}.
+Incluye cifras clave, partes involucradas y contexto relevante cuando estén disponibles.
+Si el artículo está en inglés, responde en español igualmente.
 Responde SOLO con el resumen, sin introducción ni etiquetas.
 
 Título: {title}
