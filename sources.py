@@ -156,15 +156,68 @@ AI_REGULATORY_ANGLE = [
 ]
 
 
+# --- Ruido a descartar (artículos irrelevantes aunque contengan keywords) ---
+NOISE_SIGNALS = [
+    # Nombramientos / movimientos de despachos
+    "nombra socio", "nuevo socio", "incorpora como socio", "asciende a socio",
+    "nuevo counsel", "nombra counsel", "ficha a", "refuerza su área",
+    "incorpora a", "nuevos socios", "nuevo director",
+    # Oficinas / eventos de despachos
+    "estrena oficina", "abre oficina", "inaugura oficina", "nueva sede",
+    "nueva oficina", "expande su presencia",
+    # Obituarios / noticias personales
+    "fallece", "falleció", "ha muerto", "en memoria",
+    # Accidentes laborales / riesgos psicosociales (no es enforcement regulatorio)
+    "accidente laboral", "riesgo psicosocial", "baja médica", "sobrecarga laboral",
+    "juzgado de lo social", "inspección de trabajo",
+    # Resultados financieros trimestrales sin ángulo regulatorio
+    "reduce ventas", "hunde su beneficio", "beneficio neto trimestral",
+    "gana millones hasta marzo", "gana millones hasta junio",
+    # Rankings y estudios de mercado de despachos
+    "ranking de despachos", "las big four", "ingresos de las firmas",
+    "despachos líderes", "bufetes líderes", "mercado legal español",
+]
+
+# Autoridades regulatorias europeas/financieras (para Enforcement)
+EU_REGULATORY_AUTHORITIES = [
+    "edpb", "ico", "cnil", "aepd", "garante", "datatilsynet", "dpc",
+    "bafin", "fca", "eba", "esma", "amf", "cnmv",
+    "european commission", "dg comp", "dg connect",
+    "comisión europea dg", "competition commission",
+]
+
+# Keywords fuertes de Privacy (señales inequívocas, no genéricas)
+PRIVACY_STRONG_KEYWORDS = [
+    "gdpr", "rgpd", "edpb", "data protection authority", "supervisory authority",
+    "autoridad de control", "data breach notification", "brecha de datos",
+    "transfer impact assessment", "standard contractual clauses", " sccs ",
+    "adequacy decision", "dpc ", "ico ruling", "cnil decision",
+    "binding corporate rules", "bcr", "data subject rights", "derechos del interesado",
+    "data privacy framework", "dpf",
+]
+
+
+def _has_noise(text: str) -> bool:
+    return any(kw in text for kw in NOISE_SIGNALS)
+
+
+def _count_matches(text: str, keywords: list) -> int:
+    return sum(1 for kw in keywords if kw in text)
+
+
 def classify_article(title: str, summary: str) -> str | None:
     """Devuelve la categoría más adecuada o None si no es relevante."""
     text = (title + " " + summary).lower()
 
+    # Descartar ruido antes de clasificar
+    if _has_noise(text):
+        return None
+
     has_enforcement = any(kw in text for kw in ENFORCEMENT_KEYWORDS)
-    has_authority = any(kw in text for kw in ENFORCEMENT_AUTHORITIES)
+    has_eu_authority = any(kw in text for kw in EU_REGULATORY_AUTHORITIES)
     has_ai_law = any(kw in text for kw in AI_LAW_KEYWORDS)
-    has_privacy = any(kw in text for kw in PRIVACY_KEYWORDS)
-    has_fintech = any(kw in text for kw in FINTECH_KEYWORDS)
+    has_privacy_strong = any(kw in text for kw in PRIVACY_STRONG_KEYWORDS)
+    has_fintech = _count_matches(text, FINTECH_KEYWORDS) >= 2  # mínimo 2 señales
     has_legal_tech = any(kw in text for kw in LEGAL_TECH_KEYWORDS)
     has_ma = any(kw in text for kw in MA_KEYWORDS)
     has_spain = any(kw in text for kw in SPAIN_SIGNALS)
@@ -173,12 +226,15 @@ def classify_article(title: str, summary: str) -> str | None:
     has_regulatory_angle = any(kw in text for kw in AI_REGULATORY_ANGLE)
 
     # Prioridad: más específico primero
-    if has_enforcement and has_authority:
+    # Enforcement: requiere señal de multa/sanción + autoridad regulatoria europea
+    if has_enforcement and has_eu_authority:
         return "Enforcement Decisions"
     if has_ai_law:
         return "AI Law & Regulation"
-    if has_privacy:
+    # Privacy: solo con keywords fuertes e inequívocas
+    if has_privacy_strong:
         return "Privacy & GDPR Enforcement"
+    # Fintech: mínimo 2 señales para evitar falsos positivos
     if has_fintech:
         return "Fintech & DORA"
     if has_legal_tech:
