@@ -2,5 +2,4 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "python main.py"
-cronSchedule = "0 6 * * *"
+startCommand = "python telegram_bot.py"
