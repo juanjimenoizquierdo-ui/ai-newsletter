@@ -31,7 +31,7 @@ def build_html(categories: dict[str, list[dict]]) -> str:
           <!-- Header -->
           <tr>
             <td style="background:#0f0f0f;border-radius:12px 12px 0 0;padding:32px 40px;">
-              <p style="margin:0;color:#888;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Daily Brief</p>
+              <p style="margin:0;color:#888;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Weekly Brief</p>
               <h1 style="margin:8px 0 0;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:-0.5px;">AI & Law</h1>
               <p style="margin:8px 0 0;color:#666;font-size:13px;">{today} · Últimos 7 días</p>
             </td>

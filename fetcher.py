@@ -3,24 +3,24 @@ import time
 import feedparser
 import trafilatura
 from datetime import datetime, timezone, timedelta
-from groq import Groq
+from anthropic import Anthropic
 import os
 
 from sources import RSS_FEEDS, CATEGORIES, classify_article
 
 
-_groq_client = None
+_anthropic_client = None
 
 
-def _get_groq_client() -> Groq | None:
-    global _groq_client
-    if _groq_client is None:
-        api_key = os.environ.get("GROQ_API_KEY", "").strip()
+def _get_anthropic_client() -> Anthropic | None:
+    global _anthropic_client
+    if _anthropic_client is None:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
         if api_key:
-            _groq_client = Groq(api_key=api_key)
+            _anthropic_client = Anthropic(api_key=api_key)
         else:
-            print("ADVERTENCIA: GROQ_API_KEY no configurada. Se usarán resúmenes RSS sin enriquecer.")
-    return _groq_client
+            print("ADVERTENCIA: ANTHROPIC_API_KEY no configurada. Se usarán resúmenes RSS sin enriquecer.")
+    return _anthropic_client
 
 
 def _fetch_full_text(url: str) -> str:
@@ -36,9 +36,9 @@ def _fetch_full_text(url: str) -> str:
     return ""
 
 
-def _enrich_with_groq(title: str, content: str, category: str) -> str:
-    """Genera un resumen analítico en español usando Groq."""
-    client = _get_groq_client()
+def _enrich_with_claude(title: str, content: str, category: str) -> str:
+    """Genera un resumen analítico en español usando Claude."""
+    client = _get_anthropic_client()
     if not client or not content:
         return content[:400] if content else title
 
@@ -64,15 +64,14 @@ Título: {title}
 Contenido: {content[:2500]}"""
 
     try:
-        response = _get_groq_client().chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
             max_tokens=350,
-            temperature=0.3,
+            messages=[{"role": "user", "content": prompt}],
         )
-        return response.choices[0].message.content.strip()
+        return message.content[0].text.strip()
     except Exception as e:
-        print(f"  Groq error ({title[:40]}): {e}")
+        print(f"  Claude error ({title[:40]}): {e}")
         return content[:400]
 
 
@@ -107,10 +106,10 @@ def fetch_articles(hours_back: int = 168) -> dict[str, list[dict]]:
                 full_text = _fetch_full_text(link)
                 content = full_text or _clean_text(summary)
 
-                # Enriquecer con Groq
+                # Enriquecer con Claude
                 print(f"  [{category}] {title[:60]}...")
-                enriched = _enrich_with_groq(title, content, category)
-                time.sleep(2)  # Respetar rate limit de Groq (30 RPM)
+                enriched = _enrich_with_claude(title, content, category)
+                time.sleep(0.5)
 
                 categories[category].append({
                     "title": title,
